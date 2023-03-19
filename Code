@@ -1,0 +1,72 @@
+import numpy as np
+import cv2
+import os
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression 
+
+
+
+
+# Set up the paths to the image directories
+real_images_path = "/Users/dayoung/Downloads/archive/real_sample"
+synthetic_images_path = "/Users/dayoung/Downloads/archive/synthetic_sample"
+
+real_images = []
+synthetic_images = []
+labels = []
+
+# Load real images
+for image_file in os.listdir(real_images_path):
+    if not image_file.startswith('.'):
+        image = cv2.imread(os.path.join(real_images_path, image_file))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # convert to grayscale
+        image = cv2.resize(image, (100, 100))  # resize to common size
+        real_images.append(image)
+        labels.append(0)  # 0 represents real images
+
+# Load synthetic images
+for image_file in os.listdir(synthetic_images_path):
+    if not image_file.startswith('.'):
+        image = cv2.imread(os.path.join(synthetic_images_path, image_file))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # convert to grayscale
+        image = cv2.resize(image, (100, 100))  # resize to common size
+        synthetic_images.append(image)
+        labels.append(1)  # 1 represents synthetic images
+
+
+# Convert the image data and labels to numpy arrays
+real_images = np.array(real_images)
+synthetic_images = np.array(synthetic_images)
+labels = np.array(labels)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    np.concatenate((real_images, synthetic_images), axis=0), labels,
+    test_size=0.2,
+    random_state= 64
+)
+
+# Flatten the image data
+X_train = X_train.reshape(X_train.shape[0], -1)
+X_test = X_test.reshape(X_test.shape[0], -1)
+
+# Train a logistic regression classifier on the training data
+clf = LogisticRegression()
+clf.fit(X_train, y_train)
+
+# Evaluate the classifier on the testing data
+y_pred = clf.predict(X_test)
+accuracy = clf.score(X_test, y_test)
+
+print("Accuracy:", accuracy)
+
+#test cases
+#first image = first one in real 
+# second image = first element in synthetic 
+
+#if even, should be real 
+#if odd, should be synthetic. 
+if labels[8] == 1:
+    print("The image is a synthetic image.")
+else:
+    print("The image is a real image.")
